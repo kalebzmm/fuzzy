@@ -6,9 +6,9 @@ import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
 # Criando as variáveis do problema
-temperatura = ctrl.Antecedent(np.arange(0, 41, 1), 'temperatura')
+temperatura = ctrl.Antecedent(np.arange(0, 101, 1), 'temperatura')
 umidade = ctrl.Antecedent(np.arange(0, 101, 1), 'umidade')
-velocidade = ctrl.Consequent(np.arange(0, 61, 1), 'velocidade')
+tempo = ctrl.Consequent(np.arange(0, 73, 1), 'tempo')
 
 # Criando as funções de pertinência para a temperatura
 temperatura['fria'] = fuzz.trapmf(temperatura.universe, [0, 0, 10, 22])
@@ -20,35 +20,35 @@ umidade['baixa'] = fuzz.trapmf(umidade.universe, [0, 0, 20, 60])
 umidade['média'] = fuzz.trapmf(umidade.universe, [0, 50, 60, 100])
 umidade['alta'] = fuzz.trimf(umidade.universe, [60, 100, 100])
 
-# Criando as funções de pertinência para velocidade
-velocidade['lenta'] = fuzz.trapmf(velocidade.universe, [0, 0, 5, 30])
-velocidade['normal'] = fuzz.trimf(velocidade.universe, [10, 30, 50])
-velocidade['rapida'] = fuzz.trapmf(velocidade.universe, [30, 50, 60, 60])
+# Criando as funções de pertinência para tempo
+tempo['lento'] = fuzz.trapmf(tempo.universe, [30, 50, 60, 72])
+tempo['normal'] = fuzz.trimf(tempo.universe, [10, 30, 50])
+tempo['rapido'] = fuzz.trapmf(tempo.universe, [0, 0, 5, 30])
 
 # Base de Conhecimento/Regras
-rule1 = ctrl.Rule(temperatura['fria'] & umidade['baixa'], velocidade['rapida'])
-rule2 = ctrl.Rule(temperatura['quente'] | umidade['alta'], velocidade['lenta'])
-rule3 = ctrl.Rule(umidade['média'], velocidade['normal'])
+rule1 = ctrl.Rule(umidade['alta'] | (umidade['baixa'] & temperatura['quente']), tempo['lento'])
+rule2 = ctrl.Rule(temperatura['quente'] | umidade['alta'], tempo['lento'])
+rule3 = ctrl.Rule(umidade['média'] & temperatura['amena'], tempo['normal'])
 
 # Sistema Fuzzy e Simulação
-velocidade_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
-velocidade_simulador = ctrl.ControlSystemSimulation(velocidade_ctrl)
+tempo_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
+tempo_simulador = ctrl.ControlSystemSimulation(tempo_ctrl)
 
 # Entrada da temperatura
 temp = float(input('Digite a temperatura (°C): '))
-velocidade_simulador.input['temperatura'] = temp
+tempo_simulador.input['temperatura'] = temp
 
 # Entrada da umidade
 ur = float(input('Digite a umidade (%): '))
-velocidade_simulador.input['umidade'] = ur
+tempo_simulador.input['umidade'] = ur
 
 # Computando o resultado (Inferência Fuzzy + Defuzzificação)
-velocidade_simulador.compute()
-print('A velocidade é de %d dias' % round(velocidade_simulador.output['velocidade']))
+tempo_simulador.compute()
+print('O tempo de germinação é de %d horas' % round(tempo_simulador.output['tempo']))
 
 # Visualizando as regiões
-temperatura.view(sim=velocidade_simulador)
-umidade.view(sim=velocidade_simulador)
-velocidade.view(sim=velocidade_simulador)
+temperatura.view(sim=tempo_simulador)
+umidade.view(sim=tempo_simulador)
+tempo.view(sim=tempo_simulador)
 
 plt.show()
